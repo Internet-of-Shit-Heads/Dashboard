@@ -2,21 +2,46 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>Mosquitto Websockets</title>
+    <title>IoT Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="paho-mqtt.js" type="text/javascript"></script>
     <!--
-    <script src="jquery.min.js" type="text/javascript"></script>
-    <script src="config.js" type="text/javascript"></script>
+    <script src="jquery.slim.min.js" type="text/javascript"></script>
     -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales', 'Expenses'],
+          ['2004',  1000,      400],
+          ['2005',  1170,      460],
+          ['2006',  660,       1120],
+          ['2007',  1030,      540]
+        ]);
+
+        var options = {
+          title: 'Company Performance',
+          curveType: 'function',
+          legend: { position: 'bottom' }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        chart.draw(data, options);
+      }
+    </script>
 
 
     <script type="text/javascript">
     var client;
     var reconnectTimeout = 2000;
+    topic = "IoT/#";
     
     // Create a client instance
-    client = new Paho.MQTT.Client("broker.hivemq.com", 8000, "clientId");
+    client = new Paho.MQTT.Client("192.168.6.2", 1884, "clientId");
 
     // set callback handlers
     client.onConnectionLost = onConnectionLost;
@@ -30,9 +55,15 @@
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
       console.log("onConnect");
-      client.subscribe("World");
-      message = new Paho.MQTT.Message("Hello");
-      message.destinationName = "World";
+      console.log(topic)
+      client.subscribe(topic);
+      document.getElementById('topic').value = topic
+    }
+
+    function mqttSend() {
+      console.log("Send");
+      message = new Paho.MQTT.Message(document.getElementById('message').value);
+      message.destinationName = document.getElementById('out_topic').value;
       client.send(message);
     }
 
@@ -40,29 +71,39 @@
     function onConnectionLost(responseObject) {
       if (responseObject.errorCode !== 0) {
         console.log("onConnectionLost:"+responseObject.errorMessage);
+        document.getElementById('status').value = "Connection Lost:"+responseObject.errorMessage;
       }
     }
 
     // called when a message arrives
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
+      var messages = document.getElementById('messages').value
+      document.getElementById('messages').value = messages + message.payloadString + '\n';
+    //document.getElementById('messages').value = message.payloadString;
     }
-
-
-    $(document).ready(function() {
-        MQTTconnect();
-    });
 
     </script>
   </head>
 
   <body>
-    <h1>Mosquitto Websockets</h1>
+    <h1>IoT Dashboard</h1>
     <div>
-        <div>Subscribed to <input type='text' id='topic' disabled />
-        Status: <input type='text' id='status' size="80" disabled /></div>
+        <div>
+        Subscribed to <input type='text' id='topic' disabled /><br>
+        Status: <input type='text' id='status' size="80" disabled /><br>
+        Messages:<br>
+        <textarea id="messages" cols="80" rows="15"></textarea>
+        </div>
+
+        <div><h2>Write Message</h2>
+          Topic: <input type='text' id='out_topic' value='IoT/browser'/><br>
+          Message: <input type='text' id='message' /><br>
+          <button type="submit" value="Submit" onclick="mqttSend();">Submit</button>
+          </div>
 
         <ul id='ws' style="font-family: 'Courier New', Courier, monospace;"></ul>
+        <div id="curve_chart" style="width: 900px; height: 500px"></div>
     </div>
   </body>
 </html>
