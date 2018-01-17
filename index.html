@@ -9,39 +9,16 @@
     <script src="jquery.slim.min.js" type="text/javascript"></script>
     -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
 
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-          ['Year', 'Sales', 'Expenses'],
-          ['2004',  1000,      400],
-          ['2005',  1170,      460],
-          ['2006',  660,       1120],
-          ['2007',  1030,      540]
-        ]);
-
-        var options = {
-          title: 'Company Performance',
-          curveType: 'function',
-          legend: { position: 'bottom' }
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
-
-        chart.draw(data, options);
-      }
-    </script>
-
-
+    <!-- TODO move this to own script -->
     <script type="text/javascript">
     var client;
     var reconnectTimeout = 2000;
     topic = "IoT/#";
+    sensor_dict = {};
     
     // Create a client instance
-    client = new Paho.MQTT.Client("192.168.6.2", 1884, "clientId");
+    client = new Paho.MQTT.Client("192.168.44.1", 1884, "clientId");
 
     // set callback handlers
     client.onConnectionLost = onConnectionLost;
@@ -55,8 +32,8 @@
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
       console.log("onConnect");
-      console.log(topic)
       client.subscribe(topic);
+      console.log("Subscribed to topic " + topic)
       document.getElementById('topic').value = topic
     }
 
@@ -75,12 +52,92 @@
       }
     }
 
+    function refreshCharts() {
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      // <div id="curve_chart" style="width: 400px; height: 200px"></div>
+
+
+      function drawChart() {
+        for (sensor in sensor_dict){
+          console.log(sensor)
+          var chart_div = document.getElementById(sensor + "_chart");
+
+          // create chart if new sensor value
+          if (chart_div === null) {
+            var chart_div = document.createElement("div");
+            chart_div.style.width = "400px";
+            chart_div.style.height = "200px";
+            chart_div.id = sensor + "_chart";
+          }
+
+          // create data table
+          var data = new google.visualization.DataTable();
+          data.addColumn('date', 'Time of Day');
+          data.addColumn('number', sensor);
+
+          data.addRows(sensor_dict[sensor]);
+
+          var options = {
+            title: sensor,
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            hAxis: {
+              gridlines: {
+                count: -1,
+                units: {
+                  days: {format: ['MMM dd']},
+                  hours: {format: ['HH:mm', 'ha']},
+                }
+              },
+              minorGridlines: {
+                units: {
+                  hours: {format: ['hh:mm:ss a', 'ha']},
+                  minutes: {format: ['HH:mm a Z', ':mm']}
+                }
+              }
+            }
+          };
+
+          var chart = new google.visualization.LineChart(chart_div);
+
+          document.getElementById("charts").appendChild(chart_div);
+
+          chart.draw(data, options);
+        }
+      }
+    }
+
     // called when a message arrives
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
+      var rec_topic = message.topic.slice("IoT/".length);
+      var rec_message = message.payloadString;
+
+
       var messages = document.getElementById('messages').value
-      document.getElementById('messages').value = messages + message.payloadString + '\n';
-    //document.getElementById('messages').value = message.payloadString;
+      document.getElementById('messages').value = messages + rec_topic + '\t' + rec_message + '\n';
+
+      //TODO check for topics
+      //TODO sanity checks? (e.g. true/false)
+      var number_value = Number(rec_message);
+      if (!isNaN(number_value)) {
+        //add value to our dictionary
+        if (typeof(sensor_dict[rec_topic]) === "undefined") {
+          // sensor_dict[message.topic] = [['Date', rec_topic]];
+          sensor_dict[rec_topic] = [];
+          // sensor_dict[message.topic] = new google.visualization.DataTable();
+          // sensor_dict[message.topic].addColumn('date', 'Date');
+          // sensor_dict[message.topic].addColumn('number', rec_topic);
+        }
+        sensor_dict[rec_topic].push([new Date(), number_value]);
+
+        console.log(rec_topic + " is now: " + sensor_dict[rec_topic])
+
+        refreshCharts();
+      }
+
     }
 
     </script>
@@ -89,6 +146,9 @@
   <body>
     <h1>IoT Dashboard</h1>
     <div>
+        <div id="charts"></div>
+
+        <h2>Debug:</h2>
         <div>
         Subscribed to <input type='text' id='topic' disabled /><br>
         Status: <input type='text' id='status' size="80" disabled /><br>
@@ -96,14 +156,13 @@
         <textarea id="messages" cols="80" rows="15"></textarea>
         </div>
 
-        <div><h2>Write Message</h2>
+        <div>
+          <h2>Write Message</h2>
           Topic: <input type='text' id='out_topic' value='IoT/browser'/><br>
           Message: <input type='text' id='message' /><br>
           <button type="submit" value="Submit" onclick="mqttSend();">Submit</button>
-          </div>
+        </div>
 
-        <ul id='ws' style="font-family: 'Courier New', Courier, monospace;"></ul>
-        <div id="curve_chart" style="width: 900px; height: 500px"></div>
     </div>
   </body>
 </html>
