@@ -4,6 +4,8 @@
   <head>
     <title>IoT Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+
     <script src="paho-mqtt.js" type="text/javascript"></script>
     <!--
     <script src="jquery.slim.min.js" type="text/javascript"></script>
@@ -18,7 +20,7 @@
     sensor_dict = {};
     
     // Create a client instance
-    client = new Paho.MQTT.Client("192.168.44.1", 1884, "clientId");
+    client = new Paho.MQTT.Client("localhost", 1884, "clientId");
 
     // set callback handlers
     client.onConnectionLost = onConnectionLost;
@@ -70,6 +72,7 @@
             chart_div.style.width = "400px";
             chart_div.style.height = "200px";
             chart_div.id = sensor + "_chart";
+            chart_div.classList.add('chart');
           }
 
           // create data table
@@ -148,21 +151,22 @@
     <div>
         <div id="charts"></div>
 
-        <h2>Debug:</h2>
-        <div>
-        Subscribed to <input type='text' id='topic' disabled /><br>
-        Status: <input type='text' id='status' size="80" disabled /><br>
-        Messages:<br>
-        <textarea id="messages" cols="80" rows="15"></textarea>
+        <div style="clear:both">
+          Subscribed to <input type='text' id='topic' disabled /><br>
+          Status: <input type='text' id='status' size="80" disabled /><br>
         </div>
-
-        <div>
-          <h2>Write Message</h2>
-          Topic: <input type='text' id='out_topic' value='IoT/browser'/><br>
-          Message: <input type='text' id='message' /><br>
-          <button type="submit" value="Submit" onclick="mqttSend();">Submit</button>
+            
+        <div id="debug">
+          <h2>Debug</h2>
+          Last Messages:<br>
+          <textarea id="messages" cols="50" rows="10"></textarea>
+          <div>
+            Write Message:<br>
+            Topic: <input type='text' id='out_topic' value='IoT/browser'/><br>
+            Message: <input type='text' id='message' /><br>
+            <button type="submit" value="Submit" onclick="mqttSend();">Submit</button>
+          </div>
         </div>
-
     </div>
   </body>
 </html>
