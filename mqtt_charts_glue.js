@@ -105,10 +105,9 @@ function onMessageArrived(message) {
   console.log("onMessageArrived:"+message.payloadString);
   var rec_topic = message.topic.slice("IoT/".length);
   var rec_message = message.payloadString;
+  var log = document.getElementById('last_messages_log');
 
-
-  var messages = document.getElementById('messages').value
-  document.getElementById('messages').value = messages + rec_topic + '\t' + rec_message + '\n';
+  log.value = log.value; + rec_topic + '\t' + rec_message + '\n';
 
   //TODO check for topics
   //TODO sanity checks? (e.g. true/false)

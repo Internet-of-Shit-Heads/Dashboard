@@ -3,5 +3,22 @@
 }
 
 #debug {
-	clear: both;
+	position: absolute;
+	bottom: 0;
+}
+
+#debug_write {
+	float: right;
+	margin: 5px 5px 5px 5px;
+}
+
+#last_messages {
+	float: left;
+	margin: 5px 5px 5px 5px;
+}
+
+#last_messages_log {
+	width: 450px;
+	height: 100px;
+	resize: none;
 }
