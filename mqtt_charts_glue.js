@@ -6,16 +6,21 @@ sensor_dict = {};
 // Create a client instance
 client = new Paho.MQTT.Client("localhost", 1884, "clientId");
 
+var options = {
+  userName: "IoT_client",
+  password: "leafy_switch_soup",
+  useSSL: true,
+  //clientId: 'dashboard',
+  onSuccess: onConnect,
+  onFailure: onConnectionLost,
+  reconnect: true
+}
+
 // set callback handlers
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
 
-// connect the client
-client.connect({
-  onSuccess: onConnect,
-  userName: "IoT_client",
-  password: "leafy_switch_soup"
-});
+client.connect(options)
 
 
 // called when the client connects
