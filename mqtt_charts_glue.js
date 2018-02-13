@@ -4,7 +4,7 @@ topic = "IoT/#";
 sensor_dict = {};
 
 // Create a client instance
-client = new Paho.MQTT.Client("localhost", 1884, "clientId");
+client = new Paho.MQTT.Client("192.168.44.1", 1884, "clientId");
 
 var options = {
   userName: "IoT_client",
