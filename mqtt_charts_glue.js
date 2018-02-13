@@ -56,7 +56,6 @@ function refreshCharts() {
 
   function drawChart() {
     for (sensor in sensor_dict){
-      console.log(sensor)
       var chart_div = document.getElementById(sensor + "_chart");
 
       // create chart if new sensor value
@@ -112,7 +111,9 @@ function onMessageArrived(message) {
   var rec_message = message.payloadString;
   var log = document.getElementById('last_messages_log');
 
-  log.value = log.value; + rec_topic + '\t' + rec_message + '\n';
+  // TODO better way to append?
+  log.value = log.value + '\n' + new Date() + '\t' + rec_topic + '\t' + rec_message;
+  log.scrollTop = log.scrollHeight
 
   //TODO check for topics
   //TODO sanity checks? (e.g. true/false)
@@ -128,7 +129,7 @@ function onMessageArrived(message) {
     }
     sensor_dict[rec_topic].push([new Date(), number_value]);
 
-    console.log(rec_topic + " is now: " + sensor_dict[rec_topic])
+    //console.log(rec_topic + " is now: " + sensor_dict[rec_topic])
 
     refreshCharts();
   }
