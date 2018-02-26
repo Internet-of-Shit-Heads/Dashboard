@@ -116,6 +116,10 @@ function onMessageArrived(message) {
   log.scrollTop = log.scrollHeight
 
   //TODO check for topics
+  if (!rec_topic.includes("temperature") && !rec_topic.includes("humidity")) {
+    return;
+  }
+
   //TODO sanity checks? (e.g. true/false)
   var number_value = Number(rec_message);
   if (!isNaN(number_value)) {
